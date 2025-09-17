@@ -1,4 +1,3 @@
-const POLYGON_API_KEY = process.env.REACT_APP_POLYGON_API_KEY;
 
 export async function getStockPrice(symbol = "AAPL") {
   const url = `https://api.polygon.io/v2/aggs/ticker/${symbol.toUpperCase()}/prev?adjusted=true&apiKey=${POLYGON_API_KEY}`;
