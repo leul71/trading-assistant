@@ -1,16 +1,28 @@
 import { useEffect, useRef } from "react";
 
+let tvScriptLoadingPromise;
+
 export default function TradingViewChart({ symbol, index }) {
-  const containerId = `tv_chart_container_${index}`; // unique per instance
-  const ref = useRef(null);
+  const containerRef = useRef(null);
+  const containerId = `tv_chart_container_${index}`;
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
-    script.async = true;
+    if (!tvScriptLoadingPromise) {
+      tvScriptLoadingPromise = new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.async = true;
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+      });
+    }
 
-    script.onload = () => {
+    tvScriptLoadingPromise.then(() => {
       if (!window.TradingView) return;
+
+      // Clear previous widget inside the container
+      if (containerRef.current) containerRef.current.innerHTML = "";
+
       new window.TradingView.widget({
         container_id: containerId,
         symbol: `NASDAQ:${symbol}`,
@@ -19,14 +31,11 @@ export default function TradingViewChart({ symbol, index }) {
         theme: "dark",
         style: "1",
         locale: "en",
-        width: "700px",
-        height: "500px",
+        width: "100%", // Responsive width
+        height: 500,
       });
-    };
-
-    ref.current.innerHTML = ""; // Clear any previous script
-    document.head.appendChild(script);
+    });
   }, [symbol]);
 
-  return <div id={containerId} ref={ref} />;
+  return <div id={containerId} ref={containerRef} />;
 }
